@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nombres décimaux - Visualisation pédagogique</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        #main-area {
+            flex: 1;
+            max-width: 1200px;
+        }
+
+        #squares-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .square-unit {
+            background: white;
+            border: 3px solid black;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            width: 400px;
+            height: 400px;
+            position: relative;
+        }
+
+        .cell {
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .cell:hover {
+            opacity: 0.8;
+        }
+
+        .cell.selected-for-subdivision {
+            outline: 2px dashed #333;
+            outline-offset: -2px;
+        }
+
+        .cell.hundredth {
+            background-color: #FF7D29;
+        }
+
+        .cell.tenth {
+            background-color: #7B4019;
+        }
+
+        .cell.full-unit {
+            background-color: #17a2b8;
+        }
+
+        .cell.subdivided {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            padding: 0;
+        }
+
+        .thousandth {
+            border-right: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .thousandth:last-child {
+            border-right: none;
+        }
+
+        .thousandth:hover {
+            opacity: 0.8;
+        }
+
+        .thousandth.active {
+            background-color: #9b59b6;
+        }
+
+        #controls {
+            background: white;
+            border: 2px solid black;
+            padding: 25px;
+            width: 320px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-group h3 {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: 2px solid #333;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.primary {
+            background: #7B4019;
+            color: white;
+            border-color: #7B4019;
+        }
+
+        button.primary:hover {
+            background: #5a2f12;
+        }
+
+        .unit-controls button:first-child {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .unit-controls button:first-child:hover {
+            background: #c3e6cb;
+        }
+
+        .unit-controls button:last-child {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .unit-controls button:last-child:hover {
+            background: #f5c6cb;
+        }
+
+        .control-group:nth-child(2) button:first-child {
+            background: #e7d4f5;
+            border-color: #9b59b6;
+        }
+
+        .control-group:nth-child(2) button:first-child:hover {
+            background: #dcc4ed;
+        }
+
+        .control-group:nth-child(2) button:last-child {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .control-group:nth-child(2) button:last-child:hover {
+            background: #ffe8a1;
+        }
+
+        .control-group:nth-child(3) button {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+
+        .control-group:nth-child(3) button:hover {
+            background: #bee5eb;
+        }
+
+        .control-group:nth-child(4) button:last-child {
+            background: #cfe2ff;
+            border-color: #0d6efd;
+        }
+
+        .control-group:nth-child(4) button:last-child:hover {
+            background: #b6d4fe;
+        }
+
+        .control-group:nth-child(5) button {
+            background: #fff0f0;
+            border-color: #dc3545;
+        }
+
+        .control-group:nth-child(5) button:hover {
+            background: #ffe0e0;
+        }
+
+        .unit-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .unit-controls button {
+            flex: 1;
+        }
+
+        #result-display {
+            background: #FFEEA9;
+            border: 2px solid #333;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #result-display.visible {
+            display: block;
+        }
+
+        .fraction {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .fraction-line {
+            border-top: 3px solid #333;
+            margin: 5px 0;
+            width: fit-content;
+            min-width: 60px;
+        }
+
+        .decimal {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #7B4019;
+        }
+
+        .decomposition {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #555;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #ccc;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .shortcut-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-area">
+        <div id="squares-container"></div>
+        <div id="result-display">
+            <div class="fraction">
+                <div id="numerator">0</div>
+                <div class="fraction-line"></div>
+                <div id="denominator">1000</div>
+            </div>
+            <div class="decimal" id="decimal-value">0,000</div>
+            <div class="decomposition" id="decomposition"></div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="control-group">
+            <h3>Unités</h3>
+            <div class="unit-controls">
+                <button onclick="addSquare()">+ Unité</button>
+                <button onclick="removeSquare()">− Unité</button>
+            </div>
+            <button onclick="fillSquare()" style="background: #d1ecf1; border-color: #17a2b8; margin-top: 10px;">Remplir le carré</button>
+            <div class="shortcut-hint">Ctrl+Clic : sélectionner tout le carré<br>Remplir : colorie tous les centièmes</div>
+        </div>
+
+        <div class="control-group">
+            <h3>Subdivisions</h3>
+            <button onclick="toggleSubdivisionMode()">Diviser en millièmes</button>
+            <button onclick="clearThousandths()">Effacer millièmes</button>
+            <p class="info-text">Clic droit : sélectionner case(s)<br>Maj+Clic : sélection multiple rapide</p>
+        </div>
+
+        <div class="control-group">
+            <h3>Regroupements</h3>
+            <button onclick="groupTenths()">Regrouper</button>
+            <p class="info-text">Regroupe 10 centièmes consécutifs en 1 dixième</p>
+        </div>
+
+        <div class="control-group">
+            <h3>Calcul</h3>
+            <button class="primary" onclick="calculateNumber()">Écriture</button>
+            <button onclick="toggleDisplay()">Afficher / Masquer</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Réinitialisation</h3>
+            <button onclick="clearAll()">Tout effacer</button>
+        </div>
+    </div>
+
+    <script>
+        // État global de l'application
+        let squares = [createEmptySquare()];
+        let resultVisible = false;
+        let isShiftSelecting = false; // Mode sélection multiple rapide
+
+        // Structure d'un carré vide
+        function createEmptySquare() {
+            const cells = [];
+            for (let i = 0; i < 100; i++) {
+                cells.push({
+                    state: 'empty', // empty, hundredth, tenth, thousandth
+                    selectedForSubdivision: false,
+                    subdivided: false,
+                    thousandths: Array(10).fill(false),
+                    isPartOfTenth: false,
+                    tenthGroup: null
+                });
+            }
+            return cells;
+        }
+
+        // Sélectionner tout un carré (Ctrl+Clic)
+        function selectWholeSquare(squareIndex) {
+            const square = squares[squareIndex];
+            const allSelected = square.every(c => c.selectedForSubdivision || c.state === 'tenth' || c.subdivided);
+            
+            square.forEach(cell => {
+                if (cell.state !== 'tenth' && !cell.subdivided) {
+                    cell.selectedForSubdivision = !allSelected;
+                }
+            });
+            render();
+        }
+
+        // Rendu de l'interface
+        function render() {
+            const container = document.getElementById('squares-container');
+            container.innerHTML = '';
+
+            squares.forEach((square, squareIndex) => {
+                const squareDiv = document.createElement('div');
+                squareDiv.className = 'square-unit';
+
+                // Ctrl+Clic pour sélectionner tout le carré
+                squareDiv.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        selectWholeSquare(squareIndex);
+                    }
+                });
+
+                // Vérifier si le carré est plein (100 centièmes)
+                const activeCells = square.filter(cell => 
+                    cell.state === 'hundredth' || cell.state === 'tenth'
+                ).length;
+                const isFullUnit = activeCells === 100;
+
+                square.forEach((cell, cellIndex) => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+
+                    // Appliquer la couleur d'unité complète
+                    if (isFullUnit) {
+                        cellDiv.classList.add('full-unit');
+                    } else if (cell.state === 'hundredth') {
+                        cellDiv.classList.add('hundredth');
+                    } else if (cell.state === 'tenth') {
+                        cellDiv.classList.add('tenth');
+                    }
+
+                    if (cell.selectedForSubdivision) {
+                        cellDiv.classList.add('selected-for-subdivision');
+                    }
+
+                    // Gestion des millièmes
+                    if (cell.subdivided) {
+                        cellDiv.classList.add('subdivided');
+                        cell.thousandths.forEach((active, thIndex) => {
+                            const thDiv = document.createElement('div');
+                            thDiv.className = 'thousandth';
+                            if (active) thDiv.classList.add('active');
+                            thDiv.onclick = (e) => {
+                                e.stopPropagation();
+                                toggleThousandth(squareIndex, cellIndex, thIndex);
+                            };
+                            cellDiv.appendChild(thDiv);
+                        });
+                    }
+
+                    // Événements clic droit (sélection pour subdivision)
+                    cellDiv.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        if (!cell.subdivided && cell.state !== 'tenth') {
+                            cell.selectedForSubdivision = !cell.selectedForSubdivision;
+                            render();
+                        }
+                    };
+
+                    // Maj+Clic pour sélection rapide multiple
+                    cellDiv.onclick = (e) => {
+                        if (e.shiftKey && !cell.subdivided && cell.state !== 'tenth') {
+                            cell.selectedForSubdivision = !cell.selectedForSubdivision;
+                            render();
+                            return;
+                        }
+
+                        if (cell.subdivided) return;
+
+                        // Clic sur un dixième → dégrouper
+                        if (cell.state === 'tenth') {
+                            ungroupTenth(squareIndex, cellIndex);
+                            return;
+                        }
+
+                        // Toggle centième
+                        if (cell.state === 'empty') {
+                            cell.state = 'hundredth';
+                        } else if (cell.state === 'hundredth') {
+                            cell.state = 'empty';
+                        }
+                        render();
+                    };
+
+                    squareDiv.appendChild(cellDiv);
+                });
+
+                container.appendChild(squareDiv);
+            });
+        }
+
+        // Toggle millième
+        function toggleThousandth(squareIndex, cellIndex, thIndex) {
+            const cell = squares[squareIndex][cellIndex];
+            cell.thousandths[thIndex] = !cell.thousandths[thIndex];
+            render();
+        }
+
+        // Diviser en millièmes
+        function toggleSubdivisionMode() {
+            squares.forEach(square => {
+                square.forEach(cell => {
+                    if (cell.selectedForSubdivision && !cell.subdivided && cell.state !== 'tenth') {
+                        cell.subdivided = true;
+                        cell.state = 'empty';
+                        cell.selectedForSubdivision = false;
+                    }
+                });
+            });
+            render();
+        }
+
+        // Effacer les millièmes
+        function clearThousandths() {
+            squares.forEach(square => {
+                square.forEach(cell => {
+                    if (cell.subdivided) {
+                        cell.subdivided = false;
+                        cell.thousandths = Array(10).fill(false);
+                        cell.state = 'empty';
+                    }
+                });
+            });
+            render();
+        }
+
+        // Regrouper 10 centièmes en dixièmes
+        function groupTenths() {
+            squares.forEach(square => {
+                // Vérifier lignes horizontales
+                for (let row = 0; row < 10; row++) {
+                    const startIdx = row * 10;
+                    const rowCells = square.slice(startIdx, startIdx + 10);
+                    if (rowCells.every(c => c.state === 'hundredth' && !c.subdivided)) {
+                        rowCells.forEach(c => c.state = 'tenth');
+                    }
+                }
+
+                // Vérifier colonnes verticales
+                for (let col = 0; col < 10; col++) {
+                    const colCells = [];
+                    for (let row = 0; row < 10; row++) {
+                        colCells.push(square[row * 10 + col]);
+                    }
+                    if (colCells.every(c => c.state === 'hundredth' && !c.subdivided)) {
+                        colCells.forEach(c => c.state = 'tenth');
+                    }
+                }
+            });
+            render();
+        }
+
+        // Dégrouper un dixième
+        function ungroupTenth(squareIndex, cellIndex) {
+            const square = squares[squareIndex];
+            const row = Math.floor(cellIndex / 10);
+            const col = cellIndex % 10;
+
+            // Vérifier ligne horizontale
+            const rowStart = row * 10;
+            const rowCells = square.slice(rowStart, rowStart + 10);
+            if (rowCells.every(c => c.state === 'tenth')) {
+                rowCells.forEach(c => c.state = 'hundredth');
+                render();
+                return;
+            }
+
+            // Vérifier colonne verticale
+            const colCells = [];
+            for (let r = 0; r < 10; r++) {
+                colCells.push(square[r * 10 + col]);
+            }
+            if (colCells.every(c => c.state === 'tenth')) {
+                colCells.forEach(c => c.state = 'hundredth');
+                render();
+            }
+        }
+
+        // Remplir le carré le plus à droite
+        function fillSquare() {
+            const lastSquare = squares[squares.length - 1];
+            lastSquare.forEach(cell => {
+                if (!cell.subdivided && cell.state !== 'tenth') {
+                    cell.state = 'hundredth';
+                }
+            });
+            render();
+        }
+
+        // Ajouter une unité
+        function addSquare() {
+            if (squares.length < 3) {
+                squares.push(createEmptySquare());
+                render();
+            }
+        }
+
+        // Retirer une unité
+        function removeSquare() {
+            if (squares.length > 1) {
+                squares.pop();
+                render();
+            }
+        }
+
+        // Calculer le nombre
+        function calculateNumber() {
+            let totalHundredths = 0;
+            let totalThousandths = 0;
+            let fullUnits = 0;
+
+            squares.forEach(square => {
+                // Compter unités complètes
+                const activeCells = square.filter(c => 
+                    c.state === 'hundredth' || c.state === 'tenth'
+                ).length;
+                
+                if (activeCells === 100) {
+                    fullUnits++;
+                } else {
+                    // Compter centièmes et dixièmes
+                    square.forEach(cell => {
+                        if (cell.state === 'hundredth') totalHundredths++;
+                        if (cell.state === 'tenth') totalHundredths++;
+                        if (cell.subdivided) {
+                            totalThousandths += cell.thousandths.filter(t => t).length;
+                        }
+                    });
+                }
+            });
+
+            // Calcul total en millièmes
+            const totalInThousandths = (fullUnits * 1000) + (totalHundredths * 10) + totalThousandths;
+
+            // Affichage fraction
+            document.getElementById('numerator').textContent = totalInThousandths;
+            document.getElementById('denominator').textContent = '1000';
+
+            // Affichage décimal (sans zéros non significatifs)
+            let decimalValue = (totalInThousandths / 1000).toFixed(3).replace('.', ',');
+            // Supprimer les zéros inutiles à droite
+            decimalValue = decimalValue.replace(/,?0+$/, '');
+            // Si on a supprimé tous les chiffres après la virgule, garder au moins ",0"
+            if (!decimalValue.includes(',')) {
+                decimalValue += ',0';
+            } else if (decimalValue.endsWith(',')) {
+                decimalValue += '0';
+            }
+            document.getElementById('decimal-value').textContent = decimalValue;
+
+            // Affichage décomposition
+            const decompositionParts = [];
+            if (fullUnits > 0) decompositionParts.push(`${fullUnits}`);
+            if (totalHundredths > 0) decompositionParts.push(`${totalHundredths}/100`);
+            if (totalThousandths > 0) decompositionParts.push(`${totalThousandths}/1000`);
+            
+            const decompositionText = decompositionParts.length > 0 
+                ? decompositionParts.join(' + ') 
+                : '0';
+            
+            document.getElementById('decomposition').textContent = decompositionText;
+        }
+
+        // Afficher/masquer résultat
+        function toggleDisplay() {
+            resultVisible = !resultVisible;
+            const display = document.getElementById('result-display');
+            display.classList.toggle('visible', resultVisible);
+        }
+
+        // Tout effacer
+        function clearAll() {
+            squares = [createEmptySquare()];
+            resultVisible = false;
+            document.getElementById('result-display').classList.remove('visible');
+            render();
+        }
+
+        // Initialisation
+        render();
+    </script>
+</body>
+</html>
